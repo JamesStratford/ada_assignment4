@@ -8,6 +8,8 @@ package BestConversionFinder;
 import Graph.AdjacencyListGraph;
 import Graph.Edge;
 import Graph.Vertex;
+import static java.lang.Math.log;
+import java.util.Scanner;
 
 /**
  *
@@ -18,25 +20,96 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
 {
     public static final double INFINITY = Double.MAX_VALUE;
     private static final int NO_VERTEX = -1;
-    private double[][] exchangeRateTable;
-    private Vertex[] vertices;
+    private final double[][] exchangeRateTable;
+    private final Vertex[] verticesTable;
+    private Scanner scannerInput;
+    private ShortestPathsResultSet results;
     
     public BestConversionFinder(double[][] rates, E[] vertexNames)
     {
         this.exchangeRateTable = rates;
-        this.vertices = new Vertex[exchangeRateTable.length];
+        this.verticesTable = new Vertex[exchangeRateTable.length];
         for (int i =0; i < exchangeRateTable.length; i++)
         {
-            this.vertices[i] = this.addVertex(vertexNames[i]); // vertexNames must be in same order of exchangeRateTable
+            this.verticesTable[i] = this.addVertex(vertexNames[i]); // vertexNames must be in same order of exchangeRateTable
         }
         for (int i = 0; i < exchangeRateTable.length; i++)
         {
             for (int k = 0; k < exchangeRateTable[i].length; k++)
             {
-                this.addEdge(this.vertices[i], this.vertices[k], exchangeRateTable[i][k]);
+                this.addEdge(this.verticesTable[i], this.verticesTable[k], exchangeRateTable[i][k]);
             }
         }
+        
+        scannerInput = new Scanner(System.in);
     }
+    
+    public void printPath(int startIndex, int endIndex, boolean startStack)
+    {
+        getPaths();
+        if (startIndex != endIndex)
+            printPath(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], false);
+        System.out.print(verticesTable[results.p[startIndex][endIndex][startIndex]].getUserObject());
+        if (!startStack)
+            System.out.print(" -> ");
+    }
+    
+    public void printConversion(int startIndex, int endIndex, Double amount)
+    {
+        getPaths();
+        if (startIndex != endIndex)
+            printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
+        amount = results.d[startIndex][startIndex][endIndex] * amount;
+        System.out.print(amount + ", ");
+        //if (!startStack)
+        //    System.out.print(" -> ");
+    }
+    
+    
+    private ShortestPathsResultSet getPaths()
+    {
+        if (results != null)
+        {
+            return results;
+        }
+        results = floydWarshall(this);
+        return results;
+    }
+    
+    public void cliMenu()
+    {
+        String input = "";
+        do
+        {
+            System.out.println("type QUIT to exit");
+            System.out.print("Type a real number to represent an amount of currency: ");
+            double amount = scannerInput.nextDouble();
+            
+            System.out.println("Type a currency followed by another currency to get best path");
+            input = scannerInput.next();
+            for (int i = 0; i < verticesTable.length; i++)
+            {
+                if (verticesTable[i].getUserObject().equals(input))
+                {
+                    input = scannerInput.next();
+                    for (int k = 0; k < verticesTable.length; k++)
+                    {
+                        if (verticesTable[k].getUserObject().equals(input))
+                        {
+                            System.out.println("Path : ");
+                            printPath(i, k, true);
+                            System.out.println();
+                            printConversion(i, k, amount);
+                            System.out.println();
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        } while (!input.equals("QUIT"));
+    }
+
     
     public Edge<E> addEdge(Vertex<E> vertex0, Vertex<E> vertex1, double weighting)
     {  // first add the end vertices if not already in graph
@@ -66,7 +139,13 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
         int n = weights.length;
         double[][][] d = new double[n+1][][];
         int[][][] p = new int[n+1][][];
-        
+//        for (int i = 0; i < weights.length; i++)
+//        {
+//            for (int k =0; k < weights[i].length; k++)
+//            {
+//                weights[i][k] = log(1/weights[i][k]);
+//            }
+//        }
         d[0] = weights;
         p[0] = new int[n][n];
         for (int i = 0; i < n; i++)
