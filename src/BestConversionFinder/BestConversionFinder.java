@@ -21,17 +21,18 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
     public static final double INFINITY = Double.MAX_VALUE;
     private static final int NO_VERTEX = -1;
     private final double[][] exchangeRateTable;
-    private final Vertex[] verticesTable;
+    private final ConversionFinderVertex[] verticesTable;
     private Scanner scannerInput;
     private ShortestPathsResultSet results;
     
     public BestConversionFinder(double[][] rates, E[] vertexNames)
     {
         this.exchangeRateTable = rates;
-        this.verticesTable = new Vertex[exchangeRateTable.length];
+        this.verticesTable = (ConversionFinderVertex[]) new Object[exchangeRateTable.length];
         for (int i =0; i < exchangeRateTable.length; i++)
         {
             this.verticesTable[i] = this.addVertex(vertexNames[i]); // vertexNames must be in same order of exchangeRateTable
+            this.verticesTable[i].index = i;
         }
         for (int i = 0; i < exchangeRateTable.length; i++)
         {
@@ -41,7 +42,17 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
             }
         }
         
+        
         scannerInput = new Scanner(System.in);
+    }
+    
+       // adds and returns a new isolated vertex to the graph
+    @Override
+    public ConversionFinderVertex addVertex(E element)
+    {
+        ConversionFinderVertex vertex = new ConversionFinderVertex(element, 0);
+        addVertex(vertex);
+        return vertex;
     }
     
     public void printPath(int startIndex, int endIndex, boolean startStack)
@@ -58,8 +69,8 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
     {
         getPaths();
         if (startIndex != endIndex)
-            //printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
-        amount = 1/ (results.d[startIndex][startIndex][endIndex] * results.d[startIndex][startIndex][endIndex]) * amount;
+            printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
+        amount = results.d[startIndex][startIndex][endIndex] * amount;
         System.out.print(amount + ", ");
         //if (!startStack)
         //    System.out.print(" -> ");
@@ -72,7 +83,10 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
         {
             return results;
         }
-        results = floydWarshall(this);
+        //results = floydWarshall(this);
+        int[] leastPaths = this.bellmanFord(this, exchangeRateTable, NO_VERTEX);
+        //results = 
+
         return results;
     }
     
@@ -111,7 +125,7 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
     }
 
     
-    public Edge<E> addEdge(Vertex<E> vertex0, Vertex<E> vertex1, double weighting)
+    public Edge<E> addEdge(ConversionFinderVertex vertex0, ConversionFinderVertex vertex1, double weighting)
     {  // first add the end vertices if not already in graph
         if (!containsVertex(vertex0))
         {
@@ -133,28 +147,44 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
         return edge;
     }
     
-    public static int[] bellmanFord(BestConversionFinder G, double[][] w, int s)
+    public int[] bellmanFord(BestConversionFinder G, double[][] w, int s)
     {
         double[] d = new double[w.length];
         int[] leastEdge = new int[w.length];
-        for (int i = 0; i < G.verticesTable.length; i++)
+        ConversionFinderEdge[] edgeSet = (ConversionFinderEdge[]) G.edgeSet().toArray();
+        int E = edgeSet.length;
+        for (int v = 0; v < G.verticesTable.length; v++)
         {
-            d[i] = INFINITY;
-            leastEdge[i] = -1;
+            d[v] = INFINITY;
+            leastEdge[v] = -1;
         }
         d[s] = 0;
         int n = G.verticesTable.length;
         for (int i = 1; i < n-1; i++)
         {
-            for (int k = 0; k< w[i].length; k++)
+            for (int k = 0; k< E; k++)
             {
-                int u = i;
-                int v = k;
-                if (d[u] + w[i][k] < d[v])
+                int u = edgeSet[k].vertex1.index;
+                int v = edgeSet[k].vertex2.index;
+                double weight = edgeSet[k].weighting;
+                if (d[u] + weight < d[v])
                 {
-                    d[v] = d[u] + w[i][k];
+                    d[v] = d[u] + weight;
                     leastEdge[v] = u;
                 }
+            }
+        }
+        for (int k = 1; k < E; k++)
+        {
+            int u = edgeSet[k].vertex1.index;
+            int v = edgeSet[k].vertex2.index;
+            double weight = edgeSet[k].weighting;
+            if (d[u] != Integer.MAX_VALUE
+                    && d[u] + weight < d[v])
+            {
+                System.out.println(
+                        "Graph contains negative weight cycle");
+                return null;
             }
         }
         
@@ -237,14 +267,25 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
         }
     }
     
+    protected class ConversionFinderVertex extends AdjacencyListVertex
+    {
+        int index;
+        
+        public ConversionFinderVertex(E element, int index)
+        {
+            super(element);
+            this.index = index;
+        }
+    }
+    
     protected class ConversionFinderEdge implements Edge<E>
     {
         // for a directed graph edge is from vertex1 to vertex2
         
-        private Vertex<E> vertex1, vertex2;
+        private ConversionFinderVertex vertex1, vertex2;
         private double weighting;
 
-        public ConversionFinderEdge(Vertex<E> vertex1, Vertex<E> vertex2, double weighting)
+        public ConversionFinderEdge(ConversionFinderVertex vertex1, ConversionFinderVertex vertex2, double weighting)
         {
             this.vertex1 = vertex1;
             this.vertex2 = vertex2;
