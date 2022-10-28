@@ -58,8 +58,8 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
     {
         getPaths();
         if (startIndex != endIndex)
-            printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
-        amount = results.d[startIndex][startIndex][endIndex] * amount;
+            //printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
+        amount = 1/ (results.d[startIndex][startIndex][endIndex] * results.d[startIndex][startIndex][endIndex]) * amount;
         System.out.print(amount + ", ");
         //if (!startStack)
         //    System.out.print(" -> ");
@@ -97,7 +97,7 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
                         if (verticesTable[k].getUserObject().equals(input))
                         {
                             System.out.println("Path : ");
-                            printPath(i, k, true);
+                            //printPath(i, k, true);
                             System.out.println();
                             printConversion(i, k, amount);
                             System.out.println();
@@ -133,19 +133,47 @@ public class BestConversionFinder<E> extends AdjacencyListGraph<E>
         return edge;
     }
     
+    public static int[] bellmanFord(BestConversionFinder G, double[][] w, int s)
+    {
+        double[] d = new double[w.length];
+        int[] leastEdge = new int[w.length];
+        for (int i = 0; i < G.verticesTable.length; i++)
+        {
+            d[i] = INFINITY;
+            leastEdge[i] = -1;
+        }
+        d[s] = 0;
+        int n = G.verticesTable.length;
+        for (int i = 1; i < n-1; i++)
+        {
+            for (int k = 0; k< w[i].length; k++)
+            {
+                int u = i;
+                int v = k;
+                if (d[u] + w[i][k] < d[v])
+                {
+                    d[v] = d[u] + w[i][k];
+                    leastEdge[v] = u;
+                }
+            }
+        }
+        
+        return leastEdge;
+    }
+    
     public static ShortestPathsResultSet floydWarshall(BestConversionFinder graph)
     {
         double[][] weights = graph.exchangeRateTable;
         int n = weights.length;
         double[][][] d = new double[n+1][][];
         int[][][] p = new int[n+1][][];
-//        for (int i = 0; i < weights.length; i++)
-//        {
-//            for (int k =0; k < weights[i].length; k++)
-//            {
-//                weights[i][k] = log(1/weights[i][k]);
-//            }
-//        }
+        for (int i = 0; i < weights.length; i++)
+        {
+            for (int k =0; k < weights[i].length; k++)
+            {
+                weights[i][k] = log(1/weights[i][k]);
+            }
+        }
         d[0] = weights;
         p[0] = new int[n][n];
         for (int i = 0; i < n; i++)
