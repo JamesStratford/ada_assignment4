@@ -25,30 +25,30 @@ public class BestConversionFinderYeran<E>
         this.weights = weights;
     }
     
-    public Set<Edge<E>> getShortestPathsTree(Vertex<E> source)
+    public Set<Edge<E>> getShortestPathsTreeOld(Vertex<E> source)
     {
         Map<Vertex<E>,Edge<E>> leastEdges = new HashMap<Vertex<E>,Edge<E>>();
-        final Map<Vertex<E>,Float> ValuablePathEstimates = new HashMap<Vertex<E>,Float>();
+        final Map<Vertex<E>,Float> shortestPathEstimates = new HashMap<Vertex<E>,Float>();
 
         for (Vertex v : graph.vertexSet())
         {
-            ValuablePathEstimates.put(v, Float.MAX_VALUE - 20);
+            shortestPathEstimates.put(v, Float.MAX_VALUE - 20);
             leastEdges.put(v, null);
         }
         
-        ValuablePathEstimates.put(source, 0.0f);
+        shortestPathEstimates.put(source, 0.0f);
         int n = graph.vertexSet().size();
         
         for (int i = 1; i < n; i++)
         {
             for (Edge e : graph.edgeSet())
             {
-                Vertex u = e.endVertices()[0];
-                Vertex v = e.endVertices()[1];
-                if ((ValuablePathEstimates.get(u) + weights.get(e)) < ValuablePathEstimates.get(v))
+                Vertex start = e.endVertices()[0];
+                Vertex end = e.endVertices()[1];
+                if ((shortestPathEstimates.get(start) + weights.get(e)) < shortestPathEstimates.get(end))
                 {
-                    ValuablePathEstimates.put(v, ValuablePathEstimates.get(u) + weights.get(e));
-                    leastEdges.put(v, e);
+                    shortestPathEstimates.put(end, shortestPathEstimates.get(start) + weights.get(e));
+                    leastEdges.put(end, e);
                 }
             }
         }
@@ -57,11 +57,85 @@ public class BestConversionFinderYeran<E>
         {
             Vertex u = e.endVertices()[0];
             Vertex v = e.endVertices()[1];
-            if (ValuablePathEstimates.get(u) + weights.get(e) < ValuablePathEstimates.get(v))
+            if (shortestPathEstimates.get(u) + weights.get(e) < shortestPathEstimates.get(v))
             {
                 return null;
             }
         }
+        return new HashSet(leastEdges.values());
+    }
+    
+    
+    
+    public Set<Edge<E>> getShortestPathsTree(Vertex<E> source)
+    {
+        Map<Vertex<E>,Edge<E>> leastEdges = new HashMap<Vertex<E>,Edge<E>>();
+        final Map<Vertex<E>,Float> ValuablePathEstimates = new HashMap<Vertex<E>,Float>();
+
+        for (Vertex v : graph.vertexSet())
+        {
+            System.out.println("putting " + 0 + "into " + v);
+            ValuablePathEstimates.put(v, (float)(-Math.log(0)));
+            leastEdges.put(v, null);
+        }
+        
+        System.out.println("USD value = " + -20);
+        
+        ValuablePathEstimates.put(source, (float)(-20));
+        int n = graph.vertexSet().size();
+        
+        for (int i = 1; i < n; i++)
+        {
+            for (Edge e : graph.edgeSet())
+            {
+                Vertex start = e.endVertices()[0];
+                Vertex end = e.endVertices()[1];
+                float value1Toln = ValuablePathEstimates.get(start);
+                float value2Toln = weights.get(e);
+                float value3Toln = ValuablePathEstimates.get(end);
+                
+                float placeholderValue1 = value1Toln;
+                float placeholderValue2 = (float)(Math.log(1/value2Toln));
+                float placeholderValue3 = value3Toln;
+
+                System.out.println("comparing " + start + " against " + end);
+                System.out.println("Comparing " + value1Toln + " + " + value2Toln + " against " + value3Toln);
+                System.out.println("Comparing " + placeholderValue1 + " + " + placeholderValue2 + " against " + placeholderValue3);
+                if ((placeholderValue1 + placeholderValue2) < placeholderValue3)
+                {
+                    System.out.println("adding " + start + " against " + end);
+                    if (end != source)
+                    {
+                        ValuablePathEstimates.put(end, (ValuablePathEstimates.get(start) + placeholderValue2));
+                        leastEdges.put(end, e);
+                    }
+                }
+            }
+        }
+        
+        
+        /*
+        for (Edge e : graph.edgeSet())
+        {
+            Vertex start = e.endVertices()[0];
+            Vertex end = e.endVertices()[1];                
+            float value1Toln = ValuablePathEstimates.get(start);
+            float value2Toln = weights.get(e);
+            float value3Toln = ValuablePathEstimates.get(end);
+            
+                float placeholderValue1 = value1Toln;
+                float placeholderValue2 = (float)(Math.log(1/value2Toln));
+                float placeholderValue3 = value3Toln;                
+                //double placeholderValue1 = (-Math.log1p(1/value1Toln));
+                //double placeholderValue2 = (-Math.log1p(1/value2Toln));
+                //double placeholderValue3 = (-Math.log1p(1/value3Toln));
+            if (placeholderValue1 + placeholderValue2 < placeholderValue3)
+            {
+                return null;
+            }
+        }
+        */
+        
         return new HashSet(leastEdges.values());
     }
     
@@ -150,6 +224,14 @@ public class BestConversionFinderYeran<E>
        
             The example with this brief thing, is that 
        */
+       
+       for (Edge<String> edge : Bellman.getShortestPathsTreeOld(USD))
+       {
+           System.out.print(" "+edge);
+       }
+        System.out.println("");
+       
+        System.out.println("\n\nNew shortestpath:");
        for (Edge<String> edge : Bellman.getShortestPathsTree(USD))
            System.out.print(" "+edge);
        System.out.println();
