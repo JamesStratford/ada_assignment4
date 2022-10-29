@@ -69,22 +69,33 @@ public class BestConversionFinderYeran<E>
             }
         }
         
-
+        
+        /*
         for (Edge e : graph.edgeSet())
         {
             Vertex u = e.endVertices()[0];
             Vertex v = e.endVertices()[1];
             if (ValuablePathEstimates.get(u) + weights.get(e) < ValuablePathEstimates.get(v))
             {
+                System.out.println("Returning null");
                 return null;
             }
         }
+        */
         
         return new HashSet(leastEdges.values());
     }
     
-    /*
-    double[][] rates =
+    public static void main(String[] args)
+    {  
+        //easyTest1();
+        hardTest1();
+   }
+    
+    public static void hardTest1()
+    {
+        String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
+        double[][] rates =
         {
             {
                 1, 1.36, 1, 0.87, 7.85, 0.99, 147.98, 1.57, 82.45, 7.3, 5.00E-05
@@ -120,14 +131,53 @@ public class BestConversionFinderYeran<E>
                 20099.36,27374.32, 20175.56, 17540.37, 157770.76, 19995.1, 2974275.41, 31482.71, 1657102.82, 146823.8,1
             },
         };
-        String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
-    */
-    
-    public static void main(String[] args)
-    {  
         GraphADT<String> graph = new AdjacencyListGraph<String>(GraphADT.GraphType.DIRECTED);
         
-        String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
+        for (String name : names)
+        {
+            graph.addVertex(name);
+        }
+        
+        Object[] objects = graph.vertexSet().toArray();
+        Vertex[] vertices = new Vertex[names.length];
+        for (int i = 0; i < names.length; i++)
+        {
+            vertices[i] = (Vertex)objects[i];
+        }
+        
+        Vertex<String> HKD = vertices[0];
+        
+        Map<Edge<String>,Float> weights = new HashMap<Edge<String>,Float>();
+        for (int i = 0; i < names.length; i++)
+        {
+            for (int j = 0; j < names.length; j++)
+            {
+                Edge<String> placeholder = graph.addEdge(vertices[i], vertices[j]);
+                weights.put(placeholder, (float)rates[i][j]);
+            }
+        }
+        
+        System.out.println("Graph: " + graph);
+        for (Float f : weights.values())
+        {
+            System.out.println(f + " ");
+        }
+        
+        BestConversionFinderYeran<String> Bellman = new BestConversionFinderYeran<String>(graph, weights);
+        System.out.println("\n\nNew shortestpath for HKD:");
+        
+        System.out.println(HKD);
+       for (Edge<String> edge : Bellman.getShortestPathsTree(HKD))
+       {
+            System.out.print(" "+edge);
+       }
+       System.out.println();
+    }
+    
+    public static void easyTest1()
+    {
+                GraphADT<String> graph = new AdjacencyListGraph<String>(GraphADT.GraphType.DIRECTED);
+        
         Vertex<String> USD = graph.addVertex("USD");
         Vertex<String> CAD = graph.addVertex("CAD");
         Vertex<String> EUR = graph.addVertex("EUR");
@@ -165,8 +215,6 @@ public class BestConversionFinderYeran<E>
        /*
             This will find the lowest transfer rate, from what I understand, from the source
             So the lowest rate from USD to each currency will be determined
-       
-            The example with this brief thing, is that 
        */
       
        /*
@@ -180,6 +228,5 @@ public class BestConversionFinderYeran<E>
        for (Edge<String> edge : Bellman.getShortestPathsTree(EUR))
            System.out.print(" "+edge);
        System.out.println();
-       
-   }
+    }
 }
