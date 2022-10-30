@@ -5,8 +5,6 @@
  */
 package BestConversionFinder;
 
-import BestConversionFinder.BestConversionFinder.ConversionFinderEdge;
-import Graph.Edge;
 
 /**
  *
@@ -57,7 +55,7 @@ public class Driver
 //                20099.36,27374.32, 20175.56, 17540.37, 157770.76, 19995.1, 2974275.41, 31482.71, 1657102.82, 146823.8,1
 //            },
 //        };
-        //String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
+//        String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
 
         double[][] rates =
         {
@@ -92,20 +90,7 @@ public class Driver
 //        {
 //            "AUD", "EUR", "MXN"
 //        };
-
-        
-        //BestConversionFinder<String> graph = new BestConversionFinder<String>(rates, names);
-        
-        PureMatrixGraph graph = new PureMatrixGraph(rates, names);
-        
-        //PureMatrixGraph.ShortestPathsResultSet results = PureMatrixGraph.floydWarshall(graph.weights);
-        for (int i = 0; i < 5; i++)
-        {
-            graph.BellmanFord(i);
-        }
-        //int[][] p = ThirdTimeCharm.ffloyd(graph);
-        
-
+        ArbitageFinder graph = new ArbitageFinder(rates, names);
         
         System.out.println();
         graph.cliMenu();
