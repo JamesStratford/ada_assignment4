@@ -23,21 +23,39 @@ public class PureMatrixGraph
     private ShortestPathsResultSet results;
     double[][][] d;
     int[][][] p;
-    int n;
+    int n; // n of vertices
+    int e; // n of edges
+    SimpleEdge[] edges;
     
     public PureMatrixGraph(double[][] rates, String[] vertices)
     {
         this.n = vertices.length;
+        this.e = rates.length * rates[0].length;
         this.rates = rates;
         this.vertices = vertices;
         this.weights = rates.clone();
-//        for (int i = 0; i < weights.length; i++)
-//        {
-//            for (int k =0; k < weights[i].length; k++)
-//            {
-//                weights[i][k] = log(1/weights[i][k]);
-//            }
-//        }
+        for (int i = 0; i < weights.length; i++)
+        {
+            for (int k =0; k < weights[i].length; k++)
+            {
+                if (weights[i][k] == 0.0)
+                    weights[i][k] = INFINITY;
+                else
+                    weights[i][k] = log(1/weights[i][k]);
+            }
+        }
+        
+        this.edges = new SimpleEdge[e];
+        for (int i = 0; i < e;)
+        {
+            for (int j = 0; j < rates.length; j++)
+            {
+                for (int k= 0; k < rates.length; k++)
+                {
+                    edges[i++] = new SimpleEdge(j, k, weights[j][k]);
+                }
+            }
+        }
         
         scannerInput = new Scanner(System.in);
         getPaths();
@@ -151,28 +169,48 @@ public class PureMatrixGraph
         return results;
     }
     
-    public void printPath(int startIndex, int endIndex, boolean startStack)
+    public void printPath(int startIndex, int endIndex, boolean startStack, int src)
     {
-        getPaths();
-        if (startIndex != endIndex)
+        double[] path = BellmanFord(startIndex);
+        int penultimate = -1;
+        double temp = INFINITY;
+        for (int i = 0; i < path.length; i++)
         {
-            printPath(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], false);
+            if (path[i] < temp)
+            {
+                temp = path[i];
+                penultimate = i;
+            }
         }
-        System.out.print(vertices[results.p[startIndex][endIndex][startIndex]]);
-        if (!startStack)
-        {
-            System.out.print(" -> ");
-        }
+        if (startIndex != penultimate)
+            printPath(startIndex, penultimate, startStack, src);
+        System.out.println(vertices[endIndex]);
     }
+    
+//    public void printPath(int startIndex, int endIndex, boolean startStack, int src)
+//    {
+//        double[] path = BellmanFord(startIndex);
+//        if (startIndex != endIndex)
+//        {
+//            printPath(results.p[n][startIndex][startIndex], results.p[n][startIndex][endIndex], false, src);
+//        }
+//        System.out.print(vertices[results.p[n][startIndex][endIndex]]);
+//        if (!startStack)
+//        {
+//            System.out.print(" -> ");
+//        }
+//    }
 
-    public void printConversion(int startIndex, int endIndex, Double amount)
+    public void printConversion(int startIndex, int endIndex, Double amount,  int src)
     {
         getPaths();
         if (startIndex != endIndex)
         {
-            printConversion(results.p[startIndex][startIndex][startIndex], results.p[startIndex][startIndex][endIndex], (amount));
+            printConversion(results.p[5][startIndex][startIndex], results.p[5][startIndex][endIndex], (amount), src);
         }
-        amount =results.d[startIndex][startIndex][endIndex] * amount;
+        amount = Math.pow(10, results.d[5][startIndex][endIndex]) * amount;
+//        amount = results.d[5][startIndex][endIndex] * amount;
+
         System.out.print(amount + ", ");
         //if (!startStack)
         //    System.out.print(" -> ");
@@ -199,9 +237,11 @@ public class PureMatrixGraph
                         if (vertices[k].equals(input))
                         {
                             System.out.println("Path : ");
-                            printPath(i, k, true);
-                            System.out.println();
-                            printConversion(i, k, amount);
+                            //printPath(i, k, true, i);
+                            double[] newRates = BellmanFord(i);
+                            System.out.println("Conversion: " + 1/Math.pow(10, newRates[k]) * amount);
+                            //System.out.println();
+                            //printConversion(i, k, amount, i);
                             System.out.println();
                             break;
                         }
@@ -221,6 +261,58 @@ public class PureMatrixGraph
         {
             this.d = d;
             this.p = p;
+        }
+    }
+    
+    double[] BellmanFord(int s)
+    {
+        double[] dist = new double[this.n];
+        for (int V = 0; V < vertices.length; V++)
+        {
+            dist[V] = INFINITY;
+        }
+        dist[s] = 0.0;
+        for (int i = 1; i < vertices.length; i++)
+        {
+            for (int j = 0; j < this.e; j++)
+            {
+                int u = this.edges[j].src;
+                int v = this.edges[j].dest;
+                double w = this.edges[j].weight;
+                if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v])
+                    dist[v] = dist[u] + w;
+            }
+        }
+        for (int j = 0; j < this.e; ++j)
+        {
+            int u = this.edges[j].src;
+            int v = this.edges[j].dest;
+            double w = this.edges[j].weight;
+            if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v])
+            {
+                System.out.println("Arbitrage -> (" + vertices[u] +" - " + vertices[v] + ")");
+                //return;
+            }
+        }
+        
+        System.out.println("Vertex Distance from Source");
+        for (int i = 0; i < this.n; ++i)
+            System.out.println(i + "\t\t" + dist[i]);
+        
+        return dist;
+    }
+    
+    private class SimpleEdge
+    {
+        protected int src;
+        protected int dest;
+        protected double weight;
+        
+        SimpleEdge(int src, int dest, double weight)
+        {
+            this.src = src;
+            this.dest = dest;
+            this.weight = weight;
         }
     }
 }

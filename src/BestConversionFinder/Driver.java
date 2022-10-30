@@ -59,25 +59,55 @@ public class Driver
 //        };
         //String[] names = {"USD", "CAD", "EUR", "GBP", "HKD", "CHF", "JPY", "AUD", "INR","CNY","BTC"};
 
-        double[][] rates = {
-            {  1, 0.61, 0, 1.08, 0.72 },
-            {  1.64, 1,  0, 1.77, 1.18 },
-            {   0, 0, 1, 0, 0.047 },
-            {   0.92, 0.56, 0, 1, 0.67 },
-            {   1.39, 0.85, 21.19, 1.5, 1 }
+        double[][] rates =
+        {
+            {
+                1, 0.61, 0, 1.08, 0.72
+            },
+            {
+                1.64, 1, 0, 1.77, 1.18
+            },
+            {
+                0, 0, 1, 0, 0.047
+            },
+            {
+                0.92, 0.56, 0, 1, 0.67
+            },
+            {
+                1.39, 0.85, 21.19, 1.5, 1
+            }
         };
-        String[] names = { "AUD", "EUR", "MXN", "NZD", "USD"};
 
-        
+        String[] names =
+        {
+            "AUD", "EUR", "MXN", "NZD", "USD"
+        };
+
+//        double[][] rates = {
+//            {  1,       0.61,       0.5},
+//            {  1.64,       1,      0.75},
+//            {   0.5,          0.25,       1  }
+////        };
+//        String[] names =
+//        {
+//            "AUD", "EUR", "MXN"
+//        };
+
         
         //BestConversionFinder<String> graph = new BestConversionFinder<String>(rates, names);
         
         PureMatrixGraph graph = new PureMatrixGraph(rates, names);
         
-        PureMatrixGraph.ShortestPathsResultSet results = PureMatrixGraph.floydWarshall(graph.weights);
+        //PureMatrixGraph.ShortestPathsResultSet results = PureMatrixGraph.floydWarshall(graph.weights);
+        for (int i = 0; i < 5; i++)
+        {
+            graph.BellmanFord(i);
+        }
+        //int[][] p = ThirdTimeCharm.ffloyd(graph);
         
+
         
-        System.out.println(graph);
+        System.out.println();
         graph.cliMenu();
     }
 }

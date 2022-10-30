@@ -88,8 +88,8 @@ public class BestConversionFinderYeran<E>
     
     public static void main(String[] args)
     {  
-        //easyTest1();
-        hardTest1();
+        easyTest1();
+        //hardTest1();
    }
     
     public static void hardTest1()
